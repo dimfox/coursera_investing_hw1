@@ -26,3 +26,5 @@ The following are the steps I used to get the portfolios:
 6. Till now we have evenly split the initial investment amount 4 stocks, now we try to find a better way to split the money. Assume we have 20 dollars at the beginning, each stock can get at most 17 dollors and at least 1 dollar. The money can only be integer. This will allow us to again use brutal force to search for a better way to split the money. Just enumerate all possible combinations for the top 300 in C4.
 
 The whole process can be finished in few minutes. And you can find my python script in Github. I did not spend time to clean up the code and write good comments. So please pardon the mess. If someone is interested in the code, I can clean it up.
+
+https://github.com/dimfox/coursera_investing_hw1
