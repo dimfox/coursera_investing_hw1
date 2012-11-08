@@ -231,7 +231,7 @@ def main(steps=(2, 3, 4, 'improve')):
         best_splits(four_cmbs[:400], 20)
     
 if __name__ == '__main__':
-    main(('improve',))
+    main((2,3,4,'improve',))
         
     #stocks = ('PGN', 'PM', 'ROST', 'UST')
     #for ticker in stocks:
