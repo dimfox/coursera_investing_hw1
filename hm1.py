@@ -3,20 +3,32 @@ from datetime import date
 import math
 import numpy
 
+# path to the stock data files
 path = "C:/Users/wei/Downloads/QSData/Yahoo"
+
+# filter out stocks that does not have enough data
+qualify_length = 252
 
 all_stocks = {}
 all_sharpo = {}
 
 def read_files(path):
+    """Read all stock data from the input path.
+    
+    This will expect the filenames to be ticker.csv
+    """
     for fname in os.listdir(path):
         if not fname.endswith('.csv'): continue
         rec = get_adj_close(os.path.join(path,fname))
-        if len(rec) != 252: continue
+        if len(rec) != qualify_length: continue
         all_stocks[fname[:-4]] = rec
-        
+
 
 def get_adj_close(filename):
+    """Read the stock data from the file.
+    
+    This expects the file follows Yahoo!'s historial data
+    format."""
     with open(filename) as f:
         recs =[(p[0].strip(), p[6].strip()) for p in 
               (line.split(",") for line in f)]
@@ -37,10 +49,11 @@ def get_sharpo(adj_close):
     
     adj_close_diff = []
     for i in range(1, len(adj_close)):
-        adj_close_diff.append(adj_close[i] - adj_close[i-1])
+        adj_close_diff.append(adj_close[i]/adj_close[i-1] - 1)
         
     avg = numpy.average(adj_close_diff)
     std = numpy.std(adj_close_diff)
+    
     return math.sqrt(len(adj_close)) * avg/std
     
 def get_combine_sharpo(tickers, init_invest=None):
@@ -65,7 +78,7 @@ def get_combine_sharpo(tickers, init_invest=None):
         day_total = sum(close[i] * share for (close, share) in zip(adj_closes, shares))
         fund_total.append(day_total)
     
-    daily_chg = [(day2-day1)/fund_total[0] for (day2, day1) 
+    daily_chg = [day2/day1 - 1 for (day2, day1) 
                  in zip(fund_total[1:], fund_total[0:-1])]
                  
     daily_chg = [0.0] + daily_chg # add first day's change (0.00% chg)
@@ -145,9 +158,8 @@ def improve_share_split(stocks, total_shares=8):
     return max((get_combine_sharpo(stocks, shares), shares)
                for shares in split_shares(len(stocks), total_shares))
       
-def best_splits(cmbs, total_shares=8):
+def best_splits(cmbs, total_shares=8, output_threshold=4.3):
 
-    output_threshold = 4.4
     for cmb in cmbs:
         stocks = cmb[1:]
         (sharpo, share_split) = improve_share_split(stocks, total_shares)
@@ -168,15 +180,27 @@ def write_adj_close_to_file(ticker):
         f.write('%s,%s\n' % (day, price))
     f.close()
     
-def main(steps=(2, 3, 4, 'improve')):
-    # read files from disk
-    read_files(path)
-    printlog("all stocks: ", len(all_stocks))
+def get_portfolio_result(tickers, init_invest):
+    """Return  final return and sharpe ratio for the portfolio."""
+    adj_closes = [
+        extract_adj_close(ticker)
+        for ticker in tickers]
     
-    # cal sharpo for all stocks
-    for ticker in all_stocks:
-        all_sharpo[ticker] = get_sharpo(extract_adj_close(ticker))
-    printlog("done with sharpo for one stock.")
+    first_day_close = [close[0] for close in adj_closes]
+    if not init_invest:
+        # evenly split if not specified
+        init_invest = [1 for _ in tickers]
+        
+    shares = [init/close for (init, close) in zip(init_invest, first_day_close)]
+    
+    last_day_close = [close[-1] for close in adj_closes]
+    final_values = [ close * share for (close, share) in zip(last_day_close, shares)]
+    
+    percent_returns = sum(final_values) / sum(init_invest) - 1
+    
+    return percent_returns, get_combine_sharpo(tickers, init_invest)
+    
+def find_best_sharpo(steps=(2, 3, 4, 'improve')):
     
     # -------------------------------------------------
     # One stock
@@ -228,15 +252,27 @@ def main(steps=(2, 3, 4, 'improve')):
     printlog("done with four stock combinations.")
     
     if 'improve' in steps:
-        best_splits(four_cmbs[:400], 20)
+        best_splits(four_cmbs[:400], 12, 4.2)
     
 if __name__ == '__main__':
-    main((2,3,4,'improve',))
-        
-    #stocks = ('PGN', 'PM', 'ROST', 'UST')
-    #for ticker in stocks:
-    #    write_adj_close_to_file(ticker)
+
+    # ---------------------------
+    # reading data
+    # ---------------------------
+    # read files from disk
+    read_files(path)
+    printlog("all stocks: ", len(all_stocks))
     
-    #print stocks, improve_share_split(stocks, 20)
+    # cal sharpo for all stocks
+    for ticker in all_stocks:
+        all_sharpo[ticker] = get_sharpo(extract_adj_close(ticker))
+    printlog("done with sharpo for one stock.")
+    
+    # print get_portfolio_result(
+    #    ('PM', 'VGLT', 'ASPS', 'NQN'),
+    #    (250, 250, 250, 250))
+
+    find_best_sharpo((2, 3, 4, 'improve',))
+    
 
     
