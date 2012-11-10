@@ -4,7 +4,8 @@ import math
 import numpy
 
 # path to the stock data files
-path = "C:/Users/wei/Downloads/QSData/Yahoo"
+#path = "C:/Users/wei/Downloads/QSData/Yahoo"
+path = '/Users/weliu/coursera/finance/QSTK/QSData/Yahoo/'
 
 # filter out stocks that does not have enough data
 qualify_length = 252
@@ -164,7 +165,10 @@ def best_splits(cmbs, total_shares=8, output_threshold=4.3):
         stocks = cmb[1:]
         (sharpo, share_split) = improve_share_split(stocks, total_shares)
         if sharpo >= output_threshold:
-            print stocks, sharpo, share_split
+            print ', '.join(stocks),
+            print '(%s)' % ', '.join('{0:.0f}%'.format(float(s)/sum(share_split)*100) for s in share_split),
+            print ' -- %0.5f' % sharpo
+
             
 def printlog(*s):
     from datetime import datetime
@@ -252,7 +256,7 @@ def find_best_sharpo(steps=(2, 3, 4, 'improve')):
     printlog("done with four stock combinations.")
     
     if 'improve' in steps:
-        best_splits(four_cmbs[:400], 12, 4.2)
+        best_splits(four_cmbs[:400], 20, 4.3)
     
 if __name__ == '__main__':
 
@@ -272,7 +276,8 @@ if __name__ == '__main__':
     #    ('PM', 'VGLT', 'ASPS', 'NQN'),
     #    (250, 250, 250, 250))
 
-    find_best_sharpo((2, 3, 4, 'improve',))
+    #find_best_sharpo((2, 3, 4, 'improve',))
+    find_best_sharpo(('improve',))
     
 
     
