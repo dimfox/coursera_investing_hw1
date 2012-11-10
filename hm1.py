@@ -4,8 +4,7 @@ import math
 import numpy
 
 # path to the stock data files
-#path = "C:/Users/wei/Downloads/QSData/Yahoo"
-path = '/Users/weliu/coursera/finance/QSTK/QSData/Yahoo/'
+path = "C:/Users/wei/Downloads/QSData/Yahoo"
 
 # filter out stocks that does not have enough data
 qualify_length = 252
